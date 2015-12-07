@@ -1,0 +1,148 @@
+<!doctype html>
+ <html>
+ <head>
+  <meta charset="utf-8">
+  <title>小车开呀开</title>
+  <script src="jquery.js"></script>
+  <style>
+   canvas{
+    background-color: white;
+   }
+  </style>
+ </head>
+<body>
+<canvas id="myCanvas" width="1000" height="1000">
+您的浏览器不支持html5的canvas标签！</canvas>
+<button id="startAnimation">start</button>
+<button id="stopAnimation">stop</button>
+<script>
+
+var time = 0;
+var cycleTime = 0;
+var drawLineTime = 0;
+
+var drawLine = false;
+
+var canvas = $('#myCanvas');
+var context = canvas.get(0).getContext('2d');
+
+//直跑道的宽度
+var roadLength = 300;
+//Car图像
+var imageObj = new Image();
+imageObj.src = 'car.png';
+//跑道轨迹对象
+var shapeFix = function (x, y, width, height) {
+	this.x = x;
+	this.y = y;
+	this.width = width;
+	this.height = height;
+
+	this.radius = Math.floor(roadLength/3 * 2);
+	this.angle = 0;
+};
+
+//新建跑道轨迹对象
+var oneShape = new shapeFix(roadLength, roadLength * 0.8, 20, 20);
+
+function animateOne (){
+	//清除
+		context.clearRect(0,0,1000,1000);
+		//保存设置
+		context.save();
+		//XY位移保存
+		var x = 0;
+		var y = 0;
+
+		if( (cycleTime === 0) && (oneShape.angle === -90)) {
+      		cycleTime = time;//记录圆周运动暂停点
+      		drawLine = true;//设置标志位可以跑直线了
+      	}
+      	else if( (cycleTime === 0) && (oneShape.angle === -180)) {
+			cycleTime = time;
+      		drawLine = true;
+      	}
+ 		else if( (cycleTime === 0) && (oneShape.angle === -270)) {
+			cycleTime = time;
+      		drawLine = true;
+      	}
+ 		else if( (cycleTime === 0) && (oneShape.angle === -360)) {
+			cycleTime = time;
+      		drawLine = true;
+      	}
+      	//圆周运动的XY位移
+		x = oneShape.x + (oneShape.radius*Math.cos(oneShape.angle*(Math.PI/180)));
+		y = oneShape.y + (oneShape.radius*Math.sin(oneShape.angle*(Math.PI/180)));
+
+		//跑完一圈
+		if(oneShape.angle < -360) {
+			oneShape.angle = -1;
+		}
+		//将圆周运动分成四等份圆
+      	if(oneShape.angle < 0 && oneShape.angle > -90) {
+			context.translate(x + roadLength, y);
+      	} 
+      	else if(oneShape.angle < -90 && oneShape.angle > -180) {
+			context.translate(x, y);
+      	} 
+      	else if(oneShape.angle < -180 && oneShape.angle > -270) {
+			context.translate(x, y + roadLength);
+      	} 
+      	else if(oneShape.angle < -270 && oneShape.angle > -360) {
+			context.translate(x + roadLength, y + roadLength);
+      	}
+		//跑直线
+      	else if (oneShape.angle === -90) {
+      		context.translate(x + roadLength - drawLineTime, y);
+      	} 
+      	else if (oneShape.angle === -180) {
+      		context.translate(x, y + drawLineTime);
+      	} 
+      	else if (oneShape.angle === -270) {
+      		context.translate(x + drawLineTime, y + roadLength);
+      	}
+      	else if (oneShape.angle === -360) {
+      		context.translate(x + roadLength, y + roadLength - drawLineTime);
+      	}
+
+      	//cycleTime为记录点
+      	if(drawLine === true) {
+      		//跑直线速度
+      		drawLineTime += 4;
+      		//保持跑直线时图像的倾斜角度
+			context.rotate(-(((cycleTime))%360) * Math.PI/180);
+		} else {
+			//圆周运动倾斜变化
+		 	context.rotate(-((time)%360) * Math.PI/180);
+		}
+
+		//重启画圆
+		if(drawLineTime === roadLength) {
+			//重置跑直线时间
+			drawLineTime = 0;
+			//设置跑直线标志位
+			drawLine = false;
+			//将记录点赋值给圆周运动时间
+			time = cycleTime;
+			//重置圆周运动时间记录保存变量
+			cycleTime = 0;
+		}
+		//如果不跑直线，图像倾斜角度变化
+		if(drawLine === false) {
+			oneShape.angle -= 1;
+		}
+		//画图像，偏移量-60 -60
+       	context.drawImage(imageObj, -60, -60);
+       	//重置画笔
+       	context.restore();
+       	//循环
+		setTimeout(animateOne, 10);
+		//画布计数器加1
+		time += 1;
+};
+
+animateOne();
+
+</script>
+</body>
+</html>
